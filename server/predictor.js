@@ -17,9 +17,12 @@ export const FEATURE_NAMES = [
 
 function loadModel() {
   const model = JSON.parse(readFileSync(MODEL_PATH, 'utf8'))
-  const baseScore = parseFloat(
+  const baseScoreProb = parseFloat(
     model.learner.learner_model_param.base_score.replace(/[[\]]/g, ''),
   )
+
+  const baseScore = -Math.log(1.0 / baseScoreProb - 1.0)
+
   const trees = model.learner.gradient_booster.model.trees
 
   return { baseScore, trees }
@@ -42,7 +45,7 @@ function predictTree(tree, features, node = 0) {
     }
   }
 
-  return tree.base_weights[node]
+  return tree.split_conditions[node];
 }
 
 const { baseScore, trees } = loadModel()
