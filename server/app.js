@@ -1,7 +1,13 @@
+import { existsSync } from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import express from 'express'
 import cors from 'cors'
 import { predict } from './predictor.js'
 import { toModelFeatures, validatePredictionInput } from './features.js'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const distPath = path.join(__dirname, '../dist')
 
 const app = express()
 
@@ -31,5 +37,13 @@ app.post('/api/predict', (req, res) => {
     res.status(500).json({ error: 'Prediction failed' })
   }
 })
+
+if (process.env.NODE_ENV === 'production' && existsSync(distPath)) {
+  app.use(express.static(distPath))
+
+  app.get(/^(?!\/api).*/, (_req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'))
+  })
+}
 
 export default app
